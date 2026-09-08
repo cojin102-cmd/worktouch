@@ -9,7 +9,8 @@
   var TASK_TYPES = ["인계", "인수"];
   var DUE_SOON_DAYS = 3;
 
-  var LEGACY_STATUS_MAP = { "미착수": "예정", "보류": "예정" };
+  var LEGACY_STATUS_MAP = { "미착수": "예정", "보류": "예정", "지연": "진행중" };
+  var STANDARD_TASK_HEADERS = ["구분", "업무명", "담당자", "마감일", "진행상태", "중요도", "메모"];
   function normalizeStatus(raw) {
     var s = String(raw || "").trim();
     if (TASK_STATUSES.indexOf(s) >= 0) return s;
@@ -438,7 +439,7 @@
     var metaSheet = XLSX.utils.aoa_to_sheet(metaRows);
     XLSX.utils.book_append_sheet(wb, metaSheet, "기본정보");
 
-    var taskHeader = ["구분", "업무명", "담당자", "처리기한", "진행상태", "중요도", "메모"];
+    var taskHeader = STANDARD_TASK_HEADERS;
     var taskRows = draft.tasks.map(function (t) {
       return [t.type || "인계", t.name || "", t.assignee || "", t.dueDate || "", t.status || "예정", t.priority || "보통", t.memo || ""];
     });
@@ -475,21 +476,27 @@
 
   // ---------- Excel 불러오기 ----------
   function parseTaskSheetRows(rows, defaultType) {
-    // rows: array of objects (header row 기준) - 유연하게 컬럼명 매칭
+    // rows: array of objects (header row 기준) - 열 위치와 무관하게 항목명으로 매칭
     return rows.map(function (row) {
-      var name = row["업무명"] || row["업무"] || "";
+      var name = String(row["업무명"] || row["업무"] || "").trim();
       if (!name) return null;
       return {
         id: uid("task"),
-        name: String(name).trim(),
+        name: name,
         assignee: String(row["담당자"] || "").trim(),
-        dueDate: normalizeExcelDate(row["처리기한"] || row["기한"] || ""),
+        dueDate: normalizeExcelDate(row["마감일"] || row["처리기한"] || row["기한"] || ""),
         status: normalizeStatus(row["진행상태"] || row["상태"]),
         priority: normalizePriority(row["중요도"]),
         type: normalizeType(row["구분"] || row["유형"], defaultType),
         memo: String(row["메모"] || row["비고"] || "").trim()
       };
     }).filter(Boolean);
+  }
+
+  function findMissingHeaders(sheet) {
+    var headerRow = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" })[0] || [];
+    var present = headerRow.map(function (h) { return String(h || "").trim(); });
+    return STANDARD_TASK_HEADERS.filter(function (h) { return present.indexOf(h) < 0; });
   }
 
   function normalizeExcelDate(value) {
@@ -530,11 +537,23 @@
         }
 
         var taskSheetName = wb.SheetNames.indexOf("업무내용") >= 0 ? "업무내용" : wb.SheetNames[0];
-        var taskRowsRaw = XLSX.utils.sheet_to_json(wb.Sheets[taskSheetName], { defval: "" });
+        var taskSheet = wb.Sheets[taskSheetName];
+
+        var missingHeaders = findMissingHeaders(taskSheet);
+        if (missingHeaders.length) {
+          alert(
+            "표준 업로드 형식과 맞지 않습니다.\n" +
+            "다음 항목명이 없습니다: " + missingHeaders.join(", ") + "\n\n" +
+            "첫 번째 행에 구분/업무명/담당자/마감일/진행상태/중요도/메모 항목명이 모두 있는지 확인해 주세요."
+          );
+          return;
+        }
+
+        var taskRowsRaw = XLSX.utils.sheet_to_json(taskSheet, { defval: "" });
         var tasks = parseTaskSheetRows(taskRowsRaw, "인수");
 
         if (!tasks.length) {
-          alert('불러올 업무 데이터를 찾지 못했습니다. "업무명" 열이 포함된 Excel 파일인지 확인해 주세요.');
+          alert('불러올 업무 데이터를 찾지 못했습니다. "업무명"이 입력된 행이 있는지 확인해 주세요.');
           return;
         }
 
