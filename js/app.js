@@ -346,7 +346,7 @@
 
   function renderReview() {
     document.getElementById("reviewMeta").innerHTML =
-      ["문서명", "인계자", "인수자", "작성일"].map(function (label, i) {
+      ["업무명", "인계자", "인수자", "작성일"].map(function (label, i) {
         var value = [state.draft.title, state.draft.from, state.draft.to, state.draft.date][i];
         return (
           '<div class="review-meta-item">' +
@@ -382,7 +382,7 @@
       state.draft.to = document.getElementById("docToInput").value.trim();
       state.draft.date = document.getElementById("docDateInput").value || todayStr();
       if (delta > 0 && !state.draft.title) {
-        alert("문서명을 입력해 주세요.");
+        alert("업무명을 입력해 주세요.");
         return;
       }
     }
@@ -430,7 +430,7 @@
     var wb = XLSX.utils.book_new();
 
     var metaRows = [
-      ["문서명", draft.title || ""],
+      ["업무명", draft.title || ""],
       ["인계자", draft.from || ""],
       ["인수자", draft.to || ""],
       ["작성일", draft.date || ""]
@@ -522,7 +522,7 @@
           var metaRows = XLSX.utils.sheet_to_json(wb.Sheets["기본정보"], { header: 1 });
           metaRows.forEach(function (r) {
             var key = r[0], val = r[1];
-            if (key === "문서명") meta.title = val || "";
+            if (key === "업무명") meta.title = val || "";
             if (key === "인계자") meta.from = val || "";
             if (key === "인수자") meta.to = val || "";
             if (key === "작성일") meta.date = normalizeExcelDate(val || "");
