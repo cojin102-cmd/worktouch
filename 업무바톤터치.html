@@ -1582,7 +1582,7 @@ svg { display: block; }
       <!-- Step 1 -->
       <div class="form-card step-panel" id="step-1">
         <div class="field">
-          <label>문서명</label>
+          <label>업무명</label>
           <input type="text" id="docTitleInput" placeholder="예) 2026년 민원처리 인수인계서">
         </div>
         <div class="field-row">
@@ -1653,7 +1653,7 @@ svg { display: block; }
               Excel 불러오기
             </button>
           </div>
-          <input type="text" id="docSearchInput" class="doc-search" placeholder="문서명 검색">
+          <input type="text" id="docSearchInput" class="doc-search" placeholder="업무명 검색">
           <div class="doc-list" id="docList"></div>
         </div>
         <div class="doc-detail-panel" id="docDetail">
@@ -2035,7 +2035,7 @@ if(xr(e,"index.xml"))throw new Error("Unsupported NUMBERS 09 file");throw new Er
 
   function renderReview() {
     document.getElementById("reviewMeta").innerHTML =
-      ["문서명", "인계자", "인수자", "작성일"].map(function (label, i) {
+      ["업무명", "인계자", "인수자", "작성일"].map(function (label, i) {
         var value = [state.draft.title, state.draft.from, state.draft.to, state.draft.date][i];
         return (
           '<div class="review-meta-item">' +
@@ -2071,7 +2071,7 @@ if(xr(e,"index.xml"))throw new Error("Unsupported NUMBERS 09 file");throw new Er
       state.draft.to = document.getElementById("docToInput").value.trim();
       state.draft.date = document.getElementById("docDateInput").value || todayStr();
       if (delta > 0 && !state.draft.title) {
-        alert("문서명을 입력해 주세요.");
+        alert("업무명을 입력해 주세요.");
         return;
       }
     }
@@ -2119,7 +2119,7 @@ if(xr(e,"index.xml"))throw new Error("Unsupported NUMBERS 09 file");throw new Er
     var wb = XLSX.utils.book_new();
 
     var metaRows = [
-      ["문서명", draft.title || ""],
+      ["업무명", draft.title || ""],
       ["인계자", draft.from || ""],
       ["인수자", draft.to || ""],
       ["작성일", draft.date || ""]
@@ -2217,7 +2217,7 @@ if(xr(e,"index.xml"))throw new Error("Unsupported NUMBERS 09 file");throw new Er
           var metaRows = XLSX.utils.sheet_to_json(wb.Sheets["기본정보"], { header: 1 });
           metaRows.forEach(function (r) {
             var key = r[0], val = r[1];
-            if (key === "문서명") meta.title = val || "";
+            if (key === "업무명") meta.title = val || "";
             if (key === "인계자") meta.from = val || "";
             if (key === "인수자") meta.to = val || "";
             if (key === "작성일") meta.date = normalizeExcelDate(val || "");
